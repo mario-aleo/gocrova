@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Capture Photo</title>
+
+        <script type="text/javascript" src="js/caman.full.js"></script>
+        <script type="text/javascript" src="js/caman.js"></script>
+        
+        <script type="text/javascript" src="js/gocr.js"></script>
+        
+        <script type="text/javascript" charset="utf-8" src="cordova.js"></script>
+        
+        <script type="text/javascript" charset="utf-8">
+            
+            var pictureSource;   // picture source
+            var destinationType; // sets the format of returned value
+
+            document.addEventListener("deviceready",onDeviceReady,false);
+
+            function onDeviceReady() {
+                pictureSource=navigator.camera.PictureSourceType;
+                destinationType=navigator.camera.DestinationType;
+            }
+            
+            function onPhotoDataSuccess(imageData) {
+                
+                var output = document.getElementById("result");
+                output.innerHTML = 'Processing...';
+                
+                var canvas = document.getElementById("canvas");
+                var context = canvas.getContext("2d");
+                context.clearRect(0, 0, canvas.width, canvas.height);
+              
+                var image = new Image();
+                
+                image.height = imageData.height / 4;
+                image.width = imageData.width / 4;
+                
+                image.src = "data:image/jpeg;base64," + imageData;
+                
+    
+                Caman('canvas', image.src, function () {
+                    this.contrast(100);
+                    this.saturation(-100);
+                    this.clip(100);
+                    this.brightness(-5);
+                    this.render(function(){
+                        var canvas = document.getElementById("canvas");
+                        var parsedText = GOCR(image.src);
+                        var output = document.getElementById("result");
+                        output.innerHTML = parsedText;
+                    }); 
+                });
+            } 
+            
+            function capturePhoto() {
+              navigator.camera.getPicture(onPhotoDataSuccess, onFail, { quality: 100,
+                destinationType: destinationType.DATA_URL});
+            }
+
+            function onFail(message) {
+              alert('Failed because: ' + message);
+            }
+        </script>
+    </head>
+    
+    <body>
+        <p>Result:</p>
+        <p id="result">Gocr.js</p>
+        <button onclick="capturePhoto();">Capture Photo</button> <br>
+        <canvas id="canvas"></canvas>
+    </body>
+</html>
+
